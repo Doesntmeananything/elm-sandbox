@@ -9,7 +9,7 @@ import Test exposing (..)
 addOneTests : Test
 addOneTests =
     describe "addOne"
-        [ fuzz (intRange minInt maxInt) "adds 1 to any integer" <|
+        [ fuzz frequencyFuzzer "adds 1 to any integer" <|
             \num ->
                 addOne num |> Expect.equal (num + 1)
         ]
@@ -45,4 +45,18 @@ frequencyFuzzer =
         , ( 1, constant 5 )
         , ( 1, constant 1 )
         , ( 1, constant 10 )
+        ]
+
+
+flip : Bool -> Bool
+flip x =
+    not x
+
+
+flipTests : Test
+flipTests =
+    describe "flip"
+        [ fuzz bool "negates the given boolean value" <|
+            \value ->
+                flip value |> Expect.equal (not value)
         ]
