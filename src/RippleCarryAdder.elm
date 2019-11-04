@@ -1,4 +1,4 @@
-module RippleCarryAdder exposing (Binary, andGate, digits, fullAdder, halfAdder, inverter, orGate, rippleCarryAdder)
+module RippleCarryAdder exposing (Binary, andGate, digits, fullAdder, halfAdder, inverter, numberFromDigits, orGate, rippleCarryAdder)
 
 import Array
 import Bitwise
@@ -126,10 +126,6 @@ arrayToRecord array =
     }
 
 
-numberFromDigits digitsList =
-    List.foldl (\digit number -> digit + 10 * number) 0 digitsList
-
-
 digits number =
     let
         getDigits n =
@@ -148,3 +144,8 @@ padZeros total list =
             total - List.length list
     in
     List.repeat numberOfZeros 0 ++ list
+
+
+numberFromDigits : List Int -> Int
+numberFromDigits digitsList =
+    List.foldl (\digit number -> digit + 10 * number) 0 digitsList

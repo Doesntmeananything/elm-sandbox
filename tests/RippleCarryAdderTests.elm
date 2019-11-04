@@ -1,5 +1,6 @@
 module RippleCarryAdderTests exposing (..)
 
+import Array
 import Expect exposing (Expectation)
 import Fuzz exposing (..)
 import RippleCarryAdder exposing (..)
@@ -175,4 +176,81 @@ rippleCarryAdderTests =
                     rippleCarryAdder 0 0 1
                         |> Expect.equal 1
             ]
+        ]
+
+
+rippleCarryAdderProperty1 : Test
+rippleCarryAdderProperty1 =
+    describe "carry-out's relationship with most significant digits"
+        [ fuzz3
+            (list (intRange 0 1))
+            (list (intRange 0 1))
+            (intRange 0 1)
+            "carry-out is 0 when most significant digits are both 0"
+          <|
+            \list1 list2 carryIn ->
+                let
+                    convertToBinary digitsList =
+                        digitsList
+                            |> List.take 3
+                            |> numberFromDigits
+
+                    firstInput =
+                        convertToBinary list1
+
+                    secondInput =
+                        convertToBinary list2
+                in
+                rippleCarryAdder firstInput secondInput carryIn
+                    |> digits
+                    |> List.length
+                    |> Expect.lessThan 5
+        ]
+
+
+rippleCarryAdderProperty3 : Test
+rippleCarryAdderProperty3 =
+    describe "carry-in's relationship with least significant digits"
+        [ fuzz3
+            (list (intRange 0 1))
+            (list (intRange 0 1))
+            (constant 0)
+            """
+            the least significant digit of the output is 0 when the
+            carry-in is 0 and the least significant digits of both
+            inputs are 0
+            """
+          <|
+            \list1 list2 carryIn ->
+                let
+                    firstInput =
+                        convertToBinary list1
+
+                    secondInput =
+                        convertToBinary list2
+
+                    convertToBinary digitsList =
+                        digitsList
+                            |> List.take 4
+                            |> setLastDigitToZero
+                            |> numberFromDigits
+
+                    setLastDigitToZero digitsList =
+                        Array.fromList digitsList
+                            |> Array.set (lastIndex digitsList) 0
+                            |> Array.toList
+
+                    lastIndex digitsList =
+                        List.length digitsList - 1
+
+                    isLastDigitZero digitsList =
+                        Array.fromList digitsList
+                            |> Array.get (lastIndex digitsList)
+                            |> Maybe.withDefault 0
+                            |> (==) 0
+                in
+                rippleCarryAdder firstInput secondInput carryIn
+                    |> digits
+                    |> isLastDigitZero
+                    |> Expect.equal True
         ]
