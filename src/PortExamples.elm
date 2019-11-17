@@ -14,11 +14,15 @@ view model =
     div []
         [ button [ onClick SendDataToJS ]
             [ text "Send Data to JavaScript" ]
+        , br [] []
+        , br [] []
+        , text ("data received from JavaScript: " ++ model)
         ]
 
 
 type Msg
     = SendDataToJS
+    | ReceivedDataFromJS Model
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -26,6 +30,17 @@ update msg model =
     case msg of
         SendDataToJS ->
             ( model, sendData "Hello, JS!" )
+
+        ReceivedDataFromJS data ->
+            ( data, Cmd.none )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    receiveData ReceivedDataFromJS
+
+
+port receiveData : (Model -> msg) -> Sub msg
 
 
 port sendData : String -> Cmd msg
@@ -42,5 +57,5 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
