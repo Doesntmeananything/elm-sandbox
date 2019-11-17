@@ -1,7 +1,7 @@
 {
   "name": "elmsandbox",
   "version": "1.0.0",
-  "description": "",
+  "description": "Trying out and breaking things in the land of Elm.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,5 +9,19 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {}
+  "devDependencies": {},
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Doesntmeananything/elm-sandbox.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Doesntmeananything/elm-sandbox/issues"
+  },
+  "homepage": "https://github.com/Doesntmeananything/elm-sandbox#readme",
+  "dependencies": {
+    "@github/image-crop-element": "^3.0.6"
+  }
 }
