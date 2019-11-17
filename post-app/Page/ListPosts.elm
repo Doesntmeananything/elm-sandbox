@@ -6,7 +6,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode
-import Post exposing (Post, PostId, postsDecoder)
+import Post exposing (Post, PostId, postsDecoder, savePosts)
 import RemoteData exposing (WebData)
 
 
@@ -23,14 +23,22 @@ type Msg
     | PostDeleted (Result Http.Error String)
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( initialModel, fetchPosts )
+init : WebData (List Post) -> ( Model, Cmd Msg )
+init posts =
+    let
+        initialCmd =
+            if RemoteData.isSuccess posts || RemoteData.isFailure posts then
+                Cmd.none
+
+            else
+                fetchPosts
+    in
+    ( initialModel posts, initialCmd )
 
 
-initialModel : Model
-initialModel =
-    { posts = RemoteData.Loading
+initialModel : WebData (List Post) -> Model
+initialModel posts =
+    { posts = posts
     , deleteError = Nothing
     }
 
@@ -52,7 +60,16 @@ update msg model =
             ( { model | posts = RemoteData.Loading }, fetchPosts )
 
         PostsReceived response ->
-            ( { model | posts = response }, Cmd.none )
+            let
+                savePostsCmd =
+                    case response of
+                        RemoteData.Success actualPosts ->
+                            savePosts actualPosts
+
+                        _ ->
+                            Cmd.none
+            in
+            ( { model | posts = response }, savePostsCmd )
 
         DeletePost postId ->
             ( model, deletePost postId )

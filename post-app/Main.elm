@@ -3,14 +3,18 @@ module Main exposing (main)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Html exposing (..)
+import Http
+import Json.Decode as Decode exposing (Value, decodeString, decodeValue)
 import Page.EditPost as EditPost
 import Page.ListPosts as ListPosts
 import Page.NewPost as NewPost
+import Post exposing (Post, postsDecoder)
+import RemoteData exposing (WebData)
 import Route exposing (Route)
 import Url exposing (Url)
 
 
-main : Program () Model Msg
+main : Program Value Model Msg
 main =
     Browser.application
         { init = init
@@ -44,7 +48,7 @@ type Msg
     | NewPageMsg NewPost.Msg
 
 
-init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init : Value -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url navKey =
     let
         model =
@@ -52,12 +56,34 @@ init flags url navKey =
             , page = NotFoundPage
             , navKey = navKey
             }
+
+        posts =
+            case decodeValue Decode.string flags of
+                Ok postsJson ->
+                    decodeStoredPosts postsJson
+
+                Err _ ->
+                    Http.BadBody "Flags must be either string or null"
+                        |> RemoteData.Failure
     in
-    initCurrentPage ( model, Cmd.none )
+    initCurrentPage posts ( model, Cmd.none )
 
 
-initCurrentPage : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
-initCurrentPage ( model, existingCmds ) =
+decodeStoredPosts : String -> WebData (List Post)
+decodeStoredPosts postsJson =
+    case decodeString postsDecoder postsJson of
+        Ok posts ->
+            RemoteData.succeed posts
+
+        Err _ ->
+            RemoteData.Loading
+
+
+initCurrentPage :
+    WebData (List Post)
+    -> ( Model, Cmd Msg )
+    -> ( Model, Cmd Msg )
+initCurrentPage posts ( model, existingCmds ) =
     let
         ( currentPage, mappedPageCmds ) =
             case model.route of
@@ -67,7 +93,7 @@ initCurrentPage ( model, existingCmds ) =
                 Route.Posts ->
                     let
                         ( pageModel, pageCmds ) =
-                            ListPosts.init
+                            ListPosts.init posts
                     in
                     ( ListPage pageModel, Cmd.map ListPageMsg pageCmds )
 
@@ -151,7 +177,7 @@ update msg model =
                     Route.parseUrl url
             in
             ( { model | route = newRoute }, Cmd.none )
-                |> initCurrentPage
+                |> initCurrentPage RemoteData.Loading
 
         ( EditPageMsg subMsg, EditPage pageModel ) ->
             let
